@@ -1,9 +1,16 @@
-// Import Firebase SDKs
+// Import Firebase SDKs (Ensure your script is type="module" in HTML)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-analytics.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js";
 
-// Initialize Firebase
+// Import EmailJS properly. Note: This import attaches emailjs to window.
+import 'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js';
+
+// Initialize EmailJS (it attaches itself to window.emailjs)
+window.emailjs.init('mvRdPcU_y88BsNAdx');
+
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBlzrGDlXrfLyHObwF2ey2i4-3wa2WKaYw",
     authDomain: "slyskitchen-403cc.firebaseapp.com",
@@ -14,143 +21,104 @@ const firebaseConfig = {
     measurementId: "G-8G3QK91ME8"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const analytics = getAnalytics(app);
 
-// Initialize EmailJS
-import emailjs from "https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js";
-emailjs.init("mvRdPcU_y88BsNAdx"); 
+// Run script after DOM is fully loaded
+document.addEventListener("DOMContentLoaded", () => {
+    // Get elements from the DOM
+    const main = document.getElementById("main");
+    const returnBtn = document.getElementById("return-btn");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const submitButton = document.getElementById("submit");
+    const signupButton = document.getElementById("sign-up");
+    const signupEmailIn = document.getElementById("email-signup");
+    const confirmSignupEmailIn = document.getElementById("confirm-email-signup");
+    const signupPasswordIn = document.getElementById("password-signup");
+    const confirmSignUpPasswordIn = document.getElementById("confirm-password-signup");
+    const createacct = document.getElementById("create-acct");
+    const createacctbtn = document.getElementById("create-acct-btn");
 
-// Get elements
-const main = document.getElementById("main");
-const createAcct = document.getElementById("create-acct");
-const returnBtn = document.getElementById("return-btn");
+    // Log errors if any elements are not found (this helps debugging)
+    if (!main) console.error("Element with id 'main' not found!");
+    if (!returnBtn) console.error("Element with id 'return-btn' not found!");
+    if (!emailInput) console.error("Element with id 'email' not found!");
+    if (!passwordInput) console.error("Element with id 'password' not found!");
+    if (!submitButton) console.error("Element with id 'submit' not found!");
+    if (!signupButton) console.error("Element with id 'sign-up' not found!");
+    if (!signupEmailIn) console.error("Element with id 'email-signup' not found!");
+    if (!confirmSignupEmailIn) console.error("Element with id 'confirm-email-signup' not found!");
+    if (!signupPasswordIn) console.error("Element with id 'password-signup' not found!");
+    if (!confirmSignUpPasswordIn) console.error("Element with id 'confirm-password-signup' not found!");
+    if (!createacct) console.error("Element with id 'create-acct' not found!");
+    if (!createacctbtn) console.error("Element with id 'create-acct-btn' not found!");
 
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const submitButton = document.getElementById("submit");
-const signupButton = document.getElementById("sign-up");
-
-const signupEmailIn = document.getElementById("email-signup");
-const confirmSignupEmailIn = document.getElementById("confirm-email-signup");
-const signupPasswordIn = document.getElementById("password-signup");
-const confirmSignupPasswordIn = document.getElementById("confirm-password-signup");
-const createAcctBtn = document.getElementById("create-acct-btn");
-
-const bookingForm = document.querySelector(".book-form form");
-const bookingBtn = document.getElementById("book-now");
-
-// Toggle between login and signup forms
-signupButton.addEventListener("click", () => {
-    main.style.display = "none";
-    createAcct.style.display = "block";
-});
-
-returnBtn.addEventListener("click", () => {
-    main.style.display = "block";
-    createAcct.style.display = "none";
-});
-
-// Handle user registration
-createAcctBtn.addEventListener("click", async () => {
-    const signupEmail = signupEmailIn.value.trim();
-    const confirmSignupEmail = confirmSignupEmailIn.value.trim();
-    const signupPassword = signupPasswordIn.value;
-    const confirmSignupPassword = confirmSignupPasswordIn.value;
-
-    if (!signupEmail || !confirmSignupEmail || !signupPassword || !confirmSignupPassword) {
-        alert("Please fill out all required fields.");
-        return;
+    // Only add event listeners if elements exist
+    if (createacctbtn && signupEmailIn && confirmSignupEmailIn && signupPasswordIn && confirmSignUpPasswordIn) {
+        createacctbtn.addEventListener("click", function () {
+            let isVerified = true;
+            const signupEmail = signupEmailIn.value;
+            const confirmSignupEmail = confirmSignupEmailIn.value;
+            if (signupEmail !== confirmSignupEmail) {
+                window.alert("Email fields do not match. Try again.");
+                isVerified = false;
+            }
+            const signupPassword = signupPasswordIn.value;
+            const confirmSignUpPassword = confirmSignUpPasswordIn.value;
+            if (signupPassword !== confirmSignUpPassword) {
+                window.alert("Password fields do not match. Try again.");
+                isVerified = false;
+            }
+            if (!signupEmail || !confirmSignupEmail || !signupPassword || !confirmSignUpPassword) {
+                window.alert("Please fill out all required fields.");
+                isVerified = false;
+            }
+            if (isVerified) {
+                createUserWithEmailAndPassword(auth, signupEmail, signupPassword)
+                    .then((userCredential) => {
+                        window.alert("Success! Account created.");
+                        logEvent(analytics, 'sign_up', { method: 'Email' });
+                        window.location = "index.html";
+                    })
+                    .catch((error) => {
+                        window.alert("Error occurred. Try again.");
+                        window.alert(error.message);
+                    });
+            }
+        });
     }
 
-    if (signupEmail !== confirmSignupEmail) {
-        alert("Email fields do not match. Try again.");
-        return;
+    if (submitButton && emailInput && passwordInput) {
+        submitButton.addEventListener("click", function () {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    window.alert("Success! Welcome back!");
+                    logEvent(analytics, 'login', { method: 'Email' });
+                    window.location = "index.html";
+                })
+                .catch((error) => {
+                    window.alert("Error occurred. Try again.");
+                    console.error(error.message);
+                });
+        });
     }
 
-    if (signupPassword !== confirmSignupPassword) {
-        alert("Password fields do not match. Try again.");
-        return;
+    if (signupButton && main && createacct) {
+        signupButton.addEventListener("click", () => {
+            main.style.display = "none";
+            createacct.style.display = "block";
+        });
     }
 
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
-        const user = userCredential.user;
-        alert("Success! Account created.");
-
-        logEvent(analytics, "sign_up", { method: "Email" });
-        window.location.href = "index.html";
-    } catch (error) {
-        console.error("Signup Error:", error.message);
-        alert("Error occurred: " + error.message);
-    }
-});
-
-// Handle user login
-submitButton.addEventListener("click", async () => {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
-
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        alert("Success! Welcome back!");
-
-        logEvent(analytics, "login", { method: "Email" });
-        window.location.href = "index.html";
-    } catch (error) {
-        console.error("Login Error:", error.message);
-        alert("Error occurred: " + error.message);
-    }
-});
-
-// Handle user bookings (Send email instead of Firestore)
-bookingForm.addEventListener("submit", async (event) => {
-    event.preventDefault(); // Prevent default form submission behavior
-
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You need to be logged in to make a booking.");
-        return;
-    }
-
-    // Get form values
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const date = document.getElementById("date").value;
-    const time = document.getElementById("time").value;
-    const guests = document.getElementById("guests").value;
-
-    if (!name || !email || !phone || !date || !time || !guests) {
-        alert("Please fill out all fields before booking.");
-        return;
-    }
-
-    // EmailJS parameters
-    const templateParams = {
-        user_name: name,
-        user_email: email,
-        user_phone: phone,
-        reservation_date: date,
-        reservation_time: time,
-        guest_count: guests
-    };
-
-    try {
-        await emailjs.send("your_service_id", "your_template_id", templateParams);
-        alert("Reservation request sent successfully! You will receive a confirmation email.");
-        
-        logEvent(analytics, "booking_made", { method: "Email" });
-
-        bookingForm.reset();
-    } catch (error) {
-        console.error("Email sending error:", error);
-        alert("Error occurred while sending your booking request. Please try again.");
+    if (returnBtn && main && createacct) {
+        returnBtn.addEventListener("click", function () {
+            main.style.display = "block";
+            createacct.style.display = "none";
+        });
     }
 });
