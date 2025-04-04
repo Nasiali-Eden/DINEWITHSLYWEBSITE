@@ -4,11 +4,8 @@ import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.14.
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-auth.js";
 import { getDatabase } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-database.js";
 
-// Import EmailJS properly. Note: This import attaches emailjs to window.
-import 'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js';
 
-// Initialize EmailJS (it attaches itself to window.emailjs)
-window.emailjs.init('mvRdPcU_y88BsNAdx');
+
 
 // Firebase configuration
 const firebaseConfig = {
